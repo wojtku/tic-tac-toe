@@ -3,7 +3,6 @@ import Board from "./Board";
 
 import "../index.css";
 
-
 export default class extends Component {
   constructor(props) {
     super(props);
@@ -14,7 +13,8 @@ export default class extends Component {
         }
       ],
       xPlayerTurn: true,
-      winner: null
+      winner: null,
+      stepNumber: 0
     };
   }
 
@@ -52,32 +52,43 @@ export default class extends Component {
         }
       ],
       xPlayerTurn: !this.state.xPlayerTurn,
-      winner: null
+      winner: null,
+      stepNumber: 0
     });
 
   handleClick = squareIndex => {
-    const { history, xPlayerTurn, winner } = this.state;
+    const { history, xPlayerTurn, winner, stepNumber } = this.state;
     const currentBoard = history[history.length - 1];
-    if (!currentBoard.squares[squareIndex] && !winner) {
-      const squares = currentBoard.squares.slice(); // creates a copy of the squares
-      squares[squareIndex] = xPlayerTurn ? "X" : "O";
-      this.setState(
-        {
-          history: history.concat([
-            {
-              squares
-            }
-          ]),
-          xPlayerTurn: !xPlayerTurn
-        },
-        this.calculateWinner
-      );
+    if ((!stepNumber && !history.length) || stepNumber === history.length - 1) {
+      if (!currentBoard.squares[squareIndex] && !winner) {
+        const squares = currentBoard.squares.slice(); // creates a copy of the squares
+        squares[squareIndex] = xPlayerTurn ? "X" : "O";
+        this.setState(
+          {
+            history: history.concat([
+              {
+                squares
+              }
+            ]),
+            xPlayerTurn: !xPlayerTurn,
+            stepNumber: stepNumber + 1
+          },
+          this.calculateWinner
+        );
+      }
+    } else {
+      console.log("switch to latest board");
     }
   };
 
+  jumpToMove = moveIndex =>
+    this.setState({
+      stepNumber: moveIndex
+    });
+
   render() {
-    const { winner, history, xPlayerTurn } = this.state;
-    const currentBoard = history[history.length - 1];
+    const { winner, history, xPlayerTurn, stepNumber } = this.state;
+    const currentBoard = history[stepNumber];
     const isDraw = !winner && !currentBoard.squares.includes(null);
     return (
       <div className="game">
@@ -95,7 +106,22 @@ export default class extends Component {
               ? `We have a draw!`
               : `Next player: ${xPlayerTurn ? "X" : "O"}`}
           </div>
-          <ol>{/* TODO */}</ol>
+          <ol>
+            {history.map((_, moveIndex) => (
+              <li key={moveIndex}>
+                {
+                  <button
+                    disabled={stepNumber === moveIndex}
+                    onClick={() => this.jumpToMove(moveIndex)}
+                  >
+                    {moveIndex
+                      ? `Go to move number ${moveIndex + 1}`
+                      : "Go to game start"}
+                  </button>
+                }
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     );
