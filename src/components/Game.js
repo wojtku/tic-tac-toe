@@ -1,21 +1,28 @@
 import React, { Component } from "react";
 import Board from "./Board";
+import History from "./History";
 
 import "../index.css";
+
+const initialState = {
+  history: [
+    {
+      squares: Array(9).fill(null),
+      moveLocation: {
+        column: null,
+        row: null
+      }
+    }
+  ],
+  xPlayerTurn: true,
+  winner: null,
+  stepNumber: 0
+};
 
 export default class extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      history: [
-        {
-          squares: Array(9).fill(null)
-        }
-      ],
-      xPlayerTurn: true,
-      winner: null,
-      stepNumber: 0
-    };
+    this.state = initialState;
   }
 
   calculateWinner = () => {
@@ -46,14 +53,8 @@ export default class extends Component {
 
   resetState = () =>
     this.setState({
-      history: [
-        {
-          squares: Array(9).fill(null)
-        }
-      ],
-      xPlayerTurn: !this.state.xPlayerTurn,
-      winner: null,
-      stepNumber: 0
+      ...initialState,
+      xPlayerTurn: !this.state.xPlayerTurn
     });
 
   handleClick = squareIndex => {
@@ -63,11 +64,13 @@ export default class extends Component {
       if (!currentBoard.squares[squareIndex] && !winner) {
         const squares = currentBoard.squares.slice(); // creates a copy of the squares
         squares[squareIndex] = xPlayerTurn ? "X" : "O";
+        debugger;
         this.setState(
           {
             history: history.concat([
               {
-                squares
+                squares,
+                moveLocation: this.calculateMoveLocation(squareIndex)
               }
             ]),
             xPlayerTurn: !xPlayerTurn,
@@ -80,6 +83,46 @@ export default class extends Component {
       console.log("switch to latest board");
     }
   };
+
+  calculateMoveLocation = squareIndex =>
+    ({
+      0: {
+        column: 0,
+        row: 0
+      },
+      1: {
+        column: 1,
+        row: 0
+      },
+      2: {
+        column: 2,
+        row: 0
+      },
+      3: {
+        column: 0,
+        row: 1
+      },
+      4: {
+        column: 1,
+        row: 1
+      },
+      5: {
+        column: 2,
+        row: 1
+      },
+      6: {
+        column: 0,
+        row: 2
+      },
+      7: {
+        column: 1,
+        row: 2
+      },
+      8: {
+        column: 2,
+        row: 2
+      }
+    }[squareIndex]);
 
   jumpToMove = moveIndex =>
     this.setState({
@@ -106,22 +149,11 @@ export default class extends Component {
               ? `We have a draw!`
               : `Next player: ${xPlayerTurn ? "X" : "O"}`}
           </div>
-          <ol>
-            {history.map((_, moveIndex) => (
-              <li key={moveIndex}>
-                {
-                  <button
-                    disabled={stepNumber === moveIndex}
-                    onClick={() => this.jumpToMove(moveIndex)}
-                  >
-                    {moveIndex
-                      ? `Go to move number ${moveIndex + 1}`
-                      : "Go to game start"}
-                  </button>
-                }
-              </li>
-            ))}
-          </ol>
+          <History
+            stepNumber={stepNumber}
+            history={history}
+            onClick={this.jumpToMove}
+          />
         </div>
       </div>
     );
